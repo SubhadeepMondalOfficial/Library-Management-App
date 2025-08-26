@@ -1,12 +1,13 @@
-import './App.css'
+import { BrowserRouter } from "react-router-dom";
+import "./App.css";
+import { AppRoutes } from "./routes";
 
 function App() {
-
   return (
-    <div>
-      <h1 className='bg-green-400'>Library Management App</h1>
-    </div>
-  )
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
