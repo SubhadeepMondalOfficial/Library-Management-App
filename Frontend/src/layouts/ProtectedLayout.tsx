@@ -45,7 +45,7 @@ export const ProtectedLayout = () => {
           </div>
         </header>
 
-        <main>
+        <main className="bg-gray-50">
           <Outlet />
         </main>
       </div>
