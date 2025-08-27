@@ -59,7 +59,11 @@ export const Dashboard = () => {
       {/* Stats Grid boxes*/}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => (
-          <Card hover className="p-6">
+          <Card
+            hover
+            className="p-6 animate-slide-up"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
             <div key={index} className="flex items-center">
               <div
                 className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}
@@ -84,7 +88,10 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate__animated animate__fadeIn"
+        style={{ animationDelay: `${stats.length * 0.1}s` }}
+      >
         {/* Recent Activities */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
