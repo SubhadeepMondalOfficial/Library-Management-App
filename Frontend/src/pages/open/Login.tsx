@@ -58,7 +58,7 @@ export const LoginPage = () => {
           {/* <button className="w-full bg-brand-primary-900 text-white py-3 rounded-lg mt-8 mb-4 hover:bg-brand-primary-700 duration-300">
             Sign In
           </button> */}
-          <Button loading={loading} onClick={() => setLoading(!loading)} >Submit Now</Button>
+          <Button loading={loading} className="mt-8 mb-4 py-3 w-full text-white flex justify-center items-center gap-2" onClick={() => setLoading(!loading)} >Submit Now</Button>
         </form>
         <p className="text-sm text-center">
           Don't have an account? Contact Admin

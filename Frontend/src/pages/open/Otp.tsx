@@ -92,7 +92,7 @@ export const OtpPage = () => {
               />
             ))}
           </div>
-          <Button>Verify Code</Button>
+          <Button className="mt-8 mb-4 py-3 w-full text-white flex justify-center items-center gap-2">Verify Code</Button>
         </form>
         <p className="text-sm text-center">Resend code in {timeLeft}s</p>
       </div>

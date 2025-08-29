@@ -15,7 +15,7 @@ const Button = ({
   return (
     <button
       type={type}
-      className={`w-full bg-brand-primary-900 text-white py-3 rounded-lg mt-8 mb-4 hover:bg-brand-primary-700 duration-300 flex justify-center items-center gap-2 ${className} ${
+      className={`bg-brand-primary-900 rounded-lg  hover:bg-brand-primary-700 duration-300 ${className} ${
         loading && "bg-slate-300 hover:bg-slate-300 hover:cursor-not-allowed"
       }`}
       {...props}

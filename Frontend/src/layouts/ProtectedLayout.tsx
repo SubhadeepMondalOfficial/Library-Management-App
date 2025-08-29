@@ -11,7 +11,7 @@ export const ProtectedLayout = () => {
       <Sidebar sideBarOpen={sideBarOpen} setSideBarOpen={setSideBarOpen} />
 
       <div className={`md:ml-64 ${sideBarOpen && "bg"}`}>
-        <header className="flex justify-between items-center h-16 shadow-md px-6 sticky top-0 bg-white">
+        <header className="flex justify-between items-center h-[66px] shadow-md px-6 sticky top-0 bg-white">
           <div>
             {!sideBarOpen && (
               <button
@@ -45,7 +45,7 @@ export const ProtectedLayout = () => {
           </div>
         </header>
 
-        <main className="bg-gray-50">
+        <main className="bg-gray-50 min-h-[calc(100vh-66px)]">
           <Outlet />
         </main>
       </div>
