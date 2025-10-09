@@ -1,11 +1,18 @@
 import { Shield } from "lucide-react";
 import Button from "../../components/Button";
 import React, { useEffect, useRef, useState } from "react";
+import { API_BASE_URL } from "../../config/env";
+import { useNavigate } from "react-router-dom";
+import { ErrorMessage } from "../../components/ErrorMessage";
 
 export const OtpPage = () => {
+  const navigate = useNavigate();
   const [otpValues, setOtpValues] = useState(Array(6).fill(""));
   const [timeLeft, setTimeLeft] = useState(60);
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [verifyBtnDisable, setVerifyBtnDisable] = useState(true);
+  const [formSubmitError, setFormSubmitError] = useState("")
 
   useEffect(() => {
     //resend code timer
@@ -15,6 +22,15 @@ export const OtpPage = () => {
 
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    //activate verify button
+    if (otpValues.join("").length === 6) {
+      setVerifyBtnDisable(false);
+    } else {
+      setVerifyBtnDisable(true);
+    }
+  }, [otpValues]);
 
   //function to handle otp digit put by user
   const handleChange = (
@@ -38,6 +54,7 @@ export const OtpPage = () => {
     index: number
   ) => {
     if (event.key === "Backspace") {
+      setFormSubmitError("")
       const newOtp = [...otpValues];
       if (otpValues[index]) {
         // Clear current box if it has a digit
@@ -63,6 +80,41 @@ export const OtpPage = () => {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyBtnDisable) {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/v1/auth/verify-otp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ otp: otpValues.join("") }),
+        });
+
+        // 👇 Manually handle response
+        const data = await response.json();
+
+        if (!response.ok) {
+          // response.ok = false means 4xx/5xx status code
+          throw new Error(data.message || "Invalid OTP");
+        }
+        localStorage.setItem("token", data.token);
+
+        //redirect to dashboard
+        navigate("/dashboard");
+      } catch (err: any) {
+        setFormSubmitError(err.message)
+        console.error(err.message || "Network error! Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-brand-primary-100">
       <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-lg animate__animated animate__fadeInLeft">
@@ -75,8 +127,8 @@ export const OtpPage = () => {
           <h2 className="font-bold text-2xl">Verify Your Account</h2>
           <p>Enter the 6-digit code sent to your email</p>
         </div>
-        <form className="mt-8">
-          <div className="flex justify-center space-x-2">
+        <form className="mt-8" onSubmit={handleSubmit}>
+          <div className="flex justify-center space-x-2 mb-3">
             {otpValues.map((val, index) => (
               <input
                 type="text"
@@ -92,7 +144,14 @@ export const OtpPage = () => {
               />
             ))}
           </div>
-          <Button className="mt-8 mb-4 py-3 w-full text-white flex justify-center items-center gap-2">Verify Code</Button>
+          <ErrorMessage message={formSubmitError} />
+          <Button
+            loading={loading}
+            className="mt-4 mb-4 py-3 w-full text-white flex justify-center items-center gap-2"
+            disabled={verifyBtnDisable}
+          >
+            Verify Code
+          </Button>
         </form>
         <p className="text-sm text-center">Resend code in {timeLeft}s</p>
       </div>

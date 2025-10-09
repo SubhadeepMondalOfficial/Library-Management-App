@@ -6,7 +6,7 @@ import connectDb from "./src/config/connectDb.js";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 const app = express();
 
 app.use(cors());

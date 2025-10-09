@@ -10,12 +10,13 @@ const Button = ({
   type = "submit",
   loading = false,
   className,
+  disabled,
   ...props
 }: ButtonProps) => {
   return (
     <button
       type={type}
-      className={`bg-brand-primary-900 rounded-lg  hover:bg-brand-primary-700 duration-300 ${className} ${
+      className={`rounded-lg ${disabled ? "bg-slate-300 hover:bg-slate-300 hover:cursor-not-allowed" : "bg-brand-primary-900 hover:bg-brand-primary-700"} duration-300 ${className} ${
         loading && "bg-slate-300 hover:bg-slate-300 hover:cursor-not-allowed"
       }`}
       {...props}

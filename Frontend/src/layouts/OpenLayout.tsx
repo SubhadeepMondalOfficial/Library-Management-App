@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react";
 import type React from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 
 export const OpenLayout: React.FC = () => {
   return (
@@ -12,15 +12,15 @@ export const OpenLayout: React.FC = () => {
         </aside>
         <aside>
           <nav className="flex justify-center items-center gap-7">
-            <button className="border-b-[3px] border-transparent hover:border-b-[3px] hover:border-brand-primary-900 hover:duration-500 transition-all ease-in-out py-2 px-4 rounded">
+            <Link to='/' className="border-b-[3px] border-transparent hover:border-b-[3px] hover:border-brand-primary-900 hover:duration-500 transition-all ease-in-out py-2 px-4 rounded">
               Home
-            </button>
-            <button className="border-b-[3px] border-transparent hover:border-b-[3px] hover:border-brand-primary-900 hover:duration-500 transition-all ease-in-out py-2 px-4 rounded">
+            </Link>
+            <Link to="/books" className="border-b-[3px] border-transparent hover:border-b-[3px] hover:border-brand-primary-900 hover:duration-500 transition-all ease-in-out py-2 px-4 rounded">
               Books
-            </button>
-            <button className="bg-brand-primary-900 text-text-dark py-2 px-6 rounded ml-2 hover:bg-brand-primary-700 duration-300">
+            </Link>
+            <Link to="/login" className="bg-brand-primary-900 text-text-dark py-2 px-6 rounded ml-2 hover:bg-brand-primary-700 duration-300">
               Login
-            </button>
+            </Link>
           </nav>
         </aside>
       </header>
