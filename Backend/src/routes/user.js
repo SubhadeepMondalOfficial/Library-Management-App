@@ -5,10 +5,13 @@ import { createNewUser, getRolesForCreation, login, resendOtp, verifyOtp } from 
 
 const router = express.Router();
 
-//login user
+//Auth Routes
 router.post("/auth/login", login)
 router.post("/auth/resend-otp", authorization, resendOtp)
 router.post("/auth/verify-otp", authorization, verifyOtp)
+router.get("/auth/verify-token", authorization, (req, res) => {
+    res.status(200).json({valid: true, user: req.user})
+})
 
 //get allowed roles in dropdown of new user creation
 router.get("/get-roles", authorization, checkRole(["owner", "admin"]), getRolesForCreation)

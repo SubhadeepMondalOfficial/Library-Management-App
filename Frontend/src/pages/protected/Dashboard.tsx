@@ -1,7 +1,13 @@
 import { BookOpen, Receipt, TrendingUp, Users } from "lucide-react";
 import { Card } from "../../components/Card";
+import { useEffect, useState } from "react";
+import { verifyToken } from "../../utils/authCheck";
+import { useNavigate } from "react-router-dom";
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
+  const [userDetails, setUserDetails] = useState(null);
+
   const stats = [
     {
       title: "Total Users",
@@ -43,6 +49,21 @@ export const Dashboard = () => {
     { action: "Book issued", user: "Mike Johnson", time: "10 minutes ago" },
     { action: "New book added", user: "Admin", time: "15 minutes ago" },
   ];
+
+  //check token everytime when page load, only valid user are allowed in this route
+  useEffect(() => {
+    const checkToken = async () => {
+      const result = await verifyToken();
+
+      if (!result.valid) {
+        navigate("/login");
+      } else {
+        setUserDetails(result.user);
+      }
+    };
+
+    checkToken();
+  }, [navigate]);
 
   return (
     <div className="py-4 px-6">
