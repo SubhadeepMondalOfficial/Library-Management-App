@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import Button from "../../components/Button";
 import { API_BASE_URL } from "../../config/env";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { verifyToken } from "../../utils/authCheck";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -37,11 +38,11 @@ export const LoginPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(formData),
+          credentials: "include", // 👈 send & receive cookies
         });
 
         // 👇 Manually handle response
         const data = await response.json();
-        localStorage.setItem("token", data.token);
 
         //exception handle
         if (!response.ok) {
@@ -60,6 +61,17 @@ export const LoginPage = () => {
       }
     }
   };
+
+  //logout user can only open login page
+  useEffect(() => {
+    const checkToken = async () => {
+      const result = await verifyToken();
+      if (result.user?.role) {
+        navigate("/dashboard");
+      }
+    };
+    checkToken();
+  }, [navigate]);
 
   useEffect(() => {
     if (formData.password.length >= 6) {

@@ -29,10 +29,20 @@ export const login = async (req, res) => {
     //if password matched then generate a JWT token to store email
     const token = await jwt.sign({ email: user.email }, process.env.JWT_SECRET);
 
+    
+    // 🍪 Set token in HttpOnly cookie
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // true in prod
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000, // 15 min
+    })
+
     //now generate OTP for first time
     await generateOtpForUser(user);
 
-    return res.status(201).json({ token });
+    return res.status(200).json({message: "OTP Send Successfully✅"})
+    
   } catch (error) {
     console.error("Failed to Login. Error => ", error.message);
     return res.status(500).json({ message: "Failed to Login!" });
@@ -77,7 +87,7 @@ export const generateOtpForUser = async (user) => {
 
 export const resendOtp = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies?.accessToken; // 👈 Read from cookie
     if (!token) {
       return res.status(404).json({ message: "Token not found!" });
     }
@@ -132,10 +142,17 @@ export const verifyOtp = async (req, res) => {
         { expiresIn: "1h" }
       );
 
-      //now return the success res to frontend
-      return res
-        .status(200)
-        .json({ message: "OTP Verified Successfully.", token: finalToken });
+      // store final token in HttpOnly cookie🍪
+       res.cookie("accessToken", finalToken, {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === "production", // true in prod
+         sameSite: "strict",
+         maxAge: 60 * 60 * 1000, // 1hour
+       });
+
+       // success return to frontend
+       return res.status(200).json({messgae: "OTP Verified Successfully✅"})
+    
     } else {
       return res
         .status(410)

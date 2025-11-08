@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../../config/env";
 import { useNavigate } from "react-router-dom";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { verifyToken } from "../../utils/authCheck";
 
 export const OtpPage = () => {
   const navigate = useNavigate();
@@ -12,7 +13,20 @@ export const OtpPage = () => {
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const [loading, setLoading] = useState(false);
   const [verifyBtnDisable, setVerifyBtnDisable] = useState(true);
-  const [formSubmitError, setFormSubmitError] = useState("")
+  const [formSubmitError, setFormSubmitError] = useState("");
+
+  //protect otp page only can access having a valid token
+  useEffect(() => {
+    const checkToken = async () => {
+      const result = await verifyToken();
+      if (!result.valid) {
+        navigate("/login");
+      } else if (result.user?.role) {
+        navigate("/dashboard");
+      }
+    };
+    checkToken();
+  }, [navigate]);
 
   useEffect(() => {
     //resend code timer
@@ -54,7 +68,7 @@ export const OtpPage = () => {
     index: number
   ) => {
     if (event.key === "Backspace") {
-      setFormSubmitError("")
+      setFormSubmitError("");
       const newOtp = [...otpValues];
       if (otpValues[index]) {
         // Clear current box if it has a digit
@@ -85,14 +99,13 @@ export const OtpPage = () => {
     if (!verifyBtnDisable) {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/v1/auth/verify-otp`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ otp: otpValues.join("") }),
+          credentials: "include", //👈 include cookies in request
         });
 
         // 👇 Manually handle response
@@ -102,12 +115,11 @@ export const OtpPage = () => {
           // response.ok = false means 4xx/5xx status code
           throw new Error(data.message || "Invalid OTP");
         }
-        localStorage.setItem("token", data.token);
 
         //redirect to dashboard
         navigate("/dashboard");
       } catch (err: any) {
-        setFormSubmitError(err.message)
+        setFormSubmitError(err.message);
         console.error(err.message || "Network error! Please try again.");
       } finally {
         setLoading(false);
