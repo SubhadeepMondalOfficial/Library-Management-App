@@ -2,9 +2,11 @@ import jwt from "jsonwebtoken";
 
 export const authorization = async (req, res, next) => {
   try {
-    const token = req.cookies?.accessToken;  // 👈 Read from cookie
+    const token = req.cookies?.accessToken; // 👈 Read from cookie
     if (!token) {
-      return res.status(401).json({ message: "Token not found!", valid: false});
+      return res
+        .status(401)
+        .json({ message: "Token not found!", valid: false });
     }
 
     //verify token & extract details from token
@@ -18,6 +20,9 @@ export const authorization = async (req, res, next) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Something went wrong in middleware", error: error.message });
+      .json({
+        message: "Something went wrong in middleware",
+        error: error.message,
+      });
   }
 };

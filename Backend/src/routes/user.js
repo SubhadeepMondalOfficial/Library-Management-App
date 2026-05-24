@@ -1,7 +1,7 @@
 import express from "express"
 import { authorization } from "../middlewares/auth.js";
 import { checkRole } from "../middlewares/checkRole.js";
-import { createNewUser, getRolesForCreation, login, resendOtp, verifyOtp } from "../controllers/user.js";
+import { createNewUser, getRolesForCreation, login, resendOtp, verifyOtp, logout, getAllUsers, deleteUser, updateUser } from "../controllers/user.js";
 
 const router = express.Router();
 
@@ -12,6 +12,10 @@ router.post("/auth/verify-otp", authorization, verifyOtp)
 router.get("/auth/verify-token", authorization, (req, res) => {
     res.status(200).json({valid: true, user: req.user})
 })
+router.get("/auth/all-users", authorization, checkRole(["owner", "admin"]), getAllUsers)
+router.put("/auth/update-user/:id", authorization, checkRole(["owner", "admin"]), updateUser);
+router.delete("/auth/delete-user/:id", authorization, checkRole(["owner", "admin"]),deleteUser);
+router.post("/auth/logout", logout)
 
 //get allowed roles in dropdown of new user creation
 router.get("/get-roles", authorization, checkRole(["owner", "admin"]), getRolesForCreation)

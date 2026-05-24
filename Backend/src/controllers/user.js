@@ -29,20 +29,18 @@ export const login = async (req, res) => {
     //if password matched then generate a JWT token to store email
     const token = await jwt.sign({ email: user.email }, process.env.JWT_SECRET);
 
-    
     // 🍪 Set token in HttpOnly cookie
     res.cookie("accessToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // true in prod
       sameSite: "strict",
       maxAge: 15 * 60 * 1000, // 15 min
-    })
+    });
 
     //now generate OTP for first time
     await generateOtpForUser(user);
 
-    return res.status(200).json({message: "OTP Send Successfully✅"})
-    
+    return res.status(200).json({ message: "OTP Send Successfully✅" });
   } catch (error) {
     console.error("Failed to Login. Error => ", error.message);
     return res.status(500).json({ message: "Failed to Login!" });
@@ -59,7 +57,7 @@ export const generateOtpForUser = async (user) => {
       //if oldOtp found then update otp
       await Otp.findOneAndUpdate(
         { email: user.email },
-        { otp: sixDigitOTP, createdAt: Date.now() }
+        { otp: sixDigitOTP, createdAt: Date.now() },
       );
     } else {
       //if no old otp found then create new otp in db
@@ -75,12 +73,12 @@ export const generateOtpForUser = async (user) => {
       user.email,
       "OTP for Login in LMS",
       `Your One Time Password(OTP): ${sixDigitOTP}
-      This OTP is valid for: 5 Minutes`
+      This OTP is valid for: 5 Minutes`,
     ); // Arguments- Email-Id, Email-Subject, Email-Body
   } catch (error) {
     console.error(
       "Failed to generate Otp for first time. Error => ",
-      error.message
+      error.message,
     );
   }
 };
@@ -105,7 +103,7 @@ export const resendOtp = async (req, res) => {
     //now generate new otp and send to user's email
     await generateOtpForUser(user);
 
-    return res.status(200).json({message: "OTP resend Successfully!"})
+    return res.status(200).json({ message: "OTP resend Successfully!" });
   } catch (error) {
     console.error("Failed to Resend OTP. Error => ", error.message);
     return res.status(500).json({ message: "Failed to Resend OTP" });
@@ -137,22 +135,26 @@ export const verifyOtp = async (req, res) => {
       }
 
       const finalToken = jwt.sign(
-        { userId: user._id, email: user.email, role: user.role },
+        {
+          userId: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
         process.env.JWT_SECRET,
-        { expiresIn: "1h" }
+        { expiresIn: "1h" },
       );
 
       // store final token in HttpOnly cookie🍪
-       res.cookie("accessToken", finalToken, {
-         httpOnly: true,
-         secure: process.env.NODE_ENV === "production", // true in prod
-         sameSite: "strict",
-         maxAge: 60 * 60 * 1000, // 1hour
-       });
+      res.cookie("accessToken", finalToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // true in prod
+        sameSite: "strict",
+        maxAge: 60 * 60 * 1000, // 1hour
+      });
 
-       // success return to frontend
-       return res.status(200).json({messgae: "OTP Verified Successfully✅"})
-    
+      // success return to frontend
+      return res.status(200).json({ messgae: "OTP Verified Successfully✅" });
     } else {
       return res
         .status(410)
@@ -178,10 +180,10 @@ export const getRolesForCreation = async (req, res) => {
 export const createNewUser = async (req, res) => {
   try {
     const { role: loggedInRole } = req?.user;
-    const { name, email, role: selectedRole } = req.body;
+    const { name, fatherName, email, aadhaar, role: selectedRole } = req.body;
 
     // Field validation
-    if (!name || !email || !selectedRole) {
+    if (!name || !fatherName || !email || !aadhaar || !selectedRole) {
       return res.status(411).json({ message: "All fields required!" });
     }
 
@@ -200,6 +202,14 @@ export const createNewUser = async (req, res) => {
       return res.status(403).json({ message: "Admin can only create members" });
     }
 
+    const aadhaarExists = await User.findOne({ aadhaar });
+
+    if (aadhaarExists) {
+      return res.status(409).json({
+        message: "Aadhaar already exists",
+      });
+    }
+
     // Check if user exists
     const isUserExist = await User.findOne({ email });
     if (isUserExist) {
@@ -215,7 +225,9 @@ export const createNewUser = async (req, res) => {
     // Create new user
     const newUser = new User({
       name,
+      fatherName,
       email,
+      aadhaar,
       password: hashPassword,
       role: selectedRole,
     });
@@ -234,11 +246,192 @@ export const createNewUser = async (req, res) => {
     res.status(201).json({
       message: "New User Created Successfully! Email Send to New User.",
     });
-    
   } catch (error) {
     console.error("Failed to create new user. Error => ", error.message);
     return res
       .status(500)
       .json({ message: "Failed to create new user", error: error.message });
   }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("-password") // hide password
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      users,
+    });
+  } catch (error) {
+    console.error("Failed to fetch users => ", error.message);
+
+    return res.status(500).json({
+      message: "Failed to fetch users",
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { id } = req.params;
+
+    const { name, fatherName, email, aadhaar, role } = req.body;
+
+    // find target user
+    const targetUser = await User.findById(id);
+
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    const existingUser = await User.findOne({
+      email,
+      _id: { $ne: id },
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        message: "Email already exists",
+      });
+    }
+
+    const aadhaarExists = await User.findOne({
+      aadhaar,
+      _id: { $ne: id },
+    });
+
+    if (aadhaarExists) {
+      return res.status(409).json({
+        message: "Aadhaar already exists",
+      });
+    }
+
+    /*
+      OWNER RULES
+      owner can edit everything
+    */
+    if (role === "owner" && targetUser.role !== "owner") {
+  const existingOwner = await User.findOne({ role: "owner" });
+
+  if (existingOwner) {
+    return res.status(403).json({
+      message: "Only one owner allowed in system",
+    });
+  }
+}
+
+      targetUser.name = name;
+      targetUser.fatherName = fatherName;
+      targetUser.email = email;
+      targetUser.aadhaar = aadhaar;
+      targetUser.role = role;
+
+    /*
+      ADMIN RULES
+      admin can only edit members
+      admin cannot edit aadhaar or role
+    */
+    if (loggedInUser.role === "admin") {
+      if (targetUser.role !== "member") {
+        return res.status(403).json({
+          message: "Admin can only edit members",
+        });
+      }
+
+      targetUser.name = name;
+      targetUser.fatherName = fatherName;
+      targetUser.email = email;
+    }
+
+    await targetUser.save();
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user: targetUser,
+    });
+  } catch (error) {
+    console.error("Update user error =>", error.message);
+
+    return res.status(500).json({
+      message: "Failed to update user",
+    });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    const { id } = req.params;
+
+    // find target user
+    const targetUser = await User.findById(id);
+
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // prevent deleting self
+    if (String(loggedInUser.userId) === String(targetUser._id)) {
+      return res.status(403).json({
+        message: "You cannot delete your own account",
+      });
+    }
+
+    /*
+      OWNER RULES
+      owner -> can delete admin/member
+      owner -> cannot delete owner
+    */
+    if (loggedInUser.role === "owner") {
+      if (targetUser.role === "owner") {
+        return res.status(403).json({
+          message: "Owner cannot delete another owner",
+        });
+      }
+    }
+
+    /*
+      ADMIN RULES
+      admin -> only delete member
+      admin -> cannot delete admin/owner/self
+    */
+    if (loggedInUser.role === "admin") {
+      if (targetUser.role !== "member") {
+        return res.status(403).json({
+          message: "Admin can only delete members",
+        });
+      }
+    }
+
+    // delete user
+    await User.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete user error =>", error.message);
+
+    return res.status(500).json({
+      message: "Failed to delete user",
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({
+    message: "Logout successful",
+  });
 };

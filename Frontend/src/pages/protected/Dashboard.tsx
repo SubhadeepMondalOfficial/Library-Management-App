@@ -1,12 +1,20 @@
 import { BookOpen, Receipt, TrendingUp, Users } from "lucide-react";
 import { Card } from "../../components/Card";
-import { useEffect, useState } from "react";
-import { verifyToken } from "../../utils/authCheck";
-import { useNavigate } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
+
+type UserDetails = {
+  _id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
+type OutletContextType = {
+  userDetails: UserDetails | null;
+};
 
 export const Dashboard = () => {
-  const navigate = useNavigate();
-  const [userDetails, setUserDetails] = useState(null);
+  const { userDetails } = useOutletContext<OutletContextType>();
 
   const stats = [
     {
@@ -50,34 +58,19 @@ export const Dashboard = () => {
     { action: "New book added", user: "Admin", time: "15 minutes ago" },
   ];
 
-  //check token everytime when page load, only valid user are allowed in this route
-  useEffect(() => {
-    const checkToken = async () => {
-      const result = await verifyToken();
-
-      if (!result.valid) {
-        navigate("/login");
-      } else {
-        setUserDetails(result.user);
-      }
-    };
-
-    checkToken();
-  }, [navigate]);
+  console.log(userDetails?.name);
 
   return (
     <div className="py-4 px-6">
-      {/* Welcome Message */}
       <div className="mb-8">
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-          Welcome back, Professor!
+          Welcome back, {userDetails?.name}!
         </h1>
         <p className="text-gray-600 mt-2">
           Here's what's happening in your library today.
         </p>
       </div>
 
-      {/* Stats Grid boxes*/}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {stats.map((stat, index) => (
           <Card
@@ -86,12 +79,13 @@ export const Dashboard = () => {
             className="p-6 animate-slide-up"
             style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <div key={index} className="flex items-center">
+            <div className="flex items-center">
               <div
                 className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}
               >
                 <stat.icon className={`w-6 h-6 ${stat.color}`} />
               </div>
+
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">
                   {stat.title}
@@ -114,11 +108,11 @@ export const Dashboard = () => {
         className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate__animated animate__fadeIn"
         style={{ animationDelay: `${stats.length * 0.1}s` }}
       >
-        {/* Recent Activities */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Recent Activities
           </h3>
+
           <div className="space-y-3">
             {recentActivities.map((activity, index) => (
               <div
@@ -137,30 +131,33 @@ export const Dashboard = () => {
           </div>
         </Card>
 
-        {/* Quick Actions */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Quick Actions
           </h3>
+
           <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center">
+            <Link to={"/dashboard/create-user"} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center">
               <Users className="w-6 h-6 text-primary-900 mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">
                 Add User
               </span>
-            </button>
+            </Link>
+
             <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center">
               <BookOpen className="w-6 h-6 text-primary-900 mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">
                 Add Book
               </span>
             </button>
+
             <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center">
               <Receipt className="w-6 h-6 text-primary-900 mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">
                 Issue Book
               </span>
             </button>
+
             <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center">
               <TrendingUp className="w-6 h-6 text-primary-900 mx-auto mb-2" />
               <span className="text-sm font-medium text-gray-700">

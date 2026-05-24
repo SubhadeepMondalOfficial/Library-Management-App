@@ -1,4 +1,5 @@
 import { BookOpen, CircleX, LayoutDashboard, Library, Receipt, UserCheck, Users } from "lucide-react";
+import { LuUserSearch } from "react-icons/lu";
 import type React from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -13,6 +14,7 @@ const Sidebar = ({
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Create User', path: '/dashboard/create-user' },
+    { icon: LuUserSearch, label: 'All Users', path: '/dashboard/all-users' },
     { icon: UserCheck, label: 'Roles', path: '/dashboard/roles' },
     { icon: Library, label: 'Books', path: '/dashboard/books' },
     { icon: Receipt, label: 'Transactions', path: '/dashboard/transactions' },
